@@ -17,21 +17,27 @@ public class TCPEchoServer extends NetLayer {
 	
 	private static ServerSocket socket;
 	
+	/**
+	 * Main entry for TCPEchoServer as a program
+	 * @param args
+	 */
 	public static void main(String[] args)
 	{
 		try {
 			int port = DEFAULT_PORT;
 			int bufferSize = DEFAULT_BUFFER_SIZE;
 			
+			// Check if there are arguments, else use default(s)
 			if (args.length > 0)
 				port = Integer.parseInt(args[0]);
 			if (args.length > 1)
 				bufferSize = Integer.parseInt(args[1]);
 			
+			// Assign arguments
 			TCPEchoServer server = new TCPEchoServer(
 						port, bufferSize, 0
 					);
-			server.start();
+			server.start(); // Start working
 		}
 		catch (Exception e)
 		{
@@ -57,9 +63,9 @@ public class TCPEchoServer extends NetLayer {
 		
 		while (true) {
 			try {
-				Socket remote = socket.accept();
+				Socket remote = socket.accept(); // Listen on local port and accept inbound connections
 				
-				new Thread(new TCPConnectionHandler(remote, bufferSize)).start();
+				new Thread(new TCPConnectionHandler(remote, bufferSize)).start(); // Assign connection to a threadable handler
 			}
 			catch (Exception e)
 			{

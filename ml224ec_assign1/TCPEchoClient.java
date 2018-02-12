@@ -14,6 +14,10 @@ public class TCPEchoClient extends NetLayer {
 	
 	private Socket socket;
 	
+	/**
+	 * Main entry for TCPEchoClient as a program
+	 * @param args
+	 */
 	public static void main(String[] args) 
 	{
 		try {
@@ -23,6 +27,7 @@ public class TCPEchoClient extends NetLayer {
 			}
 			else
 			{
+				// Assign arguments
 				TCPEchoClient client = new TCPEchoClient(
 						args[0],
 						Integer.parseInt(args[1]),
@@ -30,7 +35,7 @@ public class TCPEchoClient extends NetLayer {
 						Integer.parseInt(args[3]),
 						Integer.parseInt(args[4])
 						); 
-				client.start();
+				client.start(); // start working
 			}
 		}
 		catch (Exception e)
@@ -52,8 +57,8 @@ public class TCPEchoClient extends NetLayer {
 			socket.connect(remoteAddress);
 			
 			try {
-				//run();
-				runForASecond();
+				//run(); // run forever
+				runForASecond(); // run for a second
 				socket.close();
 			} catch (SocketException e)
 			{
@@ -71,23 +76,30 @@ public class TCPEchoClient extends NetLayer {
 	@Override
 	protected void tick() throws IOException 
 	{	
+		// Set up streams for net I/O
 		OutputStream out = socket.getOutputStream();
 		InputStream in = socket.getInputStream();
 		
+		// Send
 		out.write(MSG.getBytes(), 0, MSG.length());
 		
+		// Receive
 		String receivedPart;
 		StringBuilder stringBuilder = new StringBuilder();
 		do {
-			int readBytes = in.read(buffer, 0, bufferSize);
-			receivedPart = new String(buffer, 0, readBytes);
-			stringBuilder.append(receivedPart);
+			int readBytes = in.read(buffer, 0, bufferSize); // Read, number of bytes read assigned to readBytes
+			receivedPart = new String(buffer, 0, readBytes); // Copy from buffer
+			stringBuilder.append(receivedPart); // Add to builder
 		} while (in.available() > 0);
-			
+		// End Receive	
+		
+		// Assemble the received message
 		String receivedString = stringBuilder.toString();
 		
+		// Print output
 		System.out.printf("%d bytes sent and %d bytes received\n", MSG.length(), receivedString.length());
 		
+		// Compare
 		int res = receivedString.compareTo(MSG);
 		if (res != 0)
 		    System.out.printf("Sent and received message strings are not equal! (Delta: %d)\n", res);

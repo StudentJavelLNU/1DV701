@@ -10,7 +10,7 @@ import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 
 /**
- * 
+ * Implementation of Echo Client for UDP using NetLayer and source from the example files.
  * @author Martin Lyrå
  *
  */
@@ -20,6 +20,10 @@ public class UDPEchoClient extends NetLayer {
     
     private DatagramSocket socket;
 
+    /**
+     * Main entry for UDPEchoClient as a program
+     * @param args
+     */
     public static void main(String[] args)
     {
     	try {
@@ -29,6 +33,7 @@ public class UDPEchoClient extends NetLayer {
 			}
 			else
 			{
+				// Assign arguments
 				UDPEchoClient client = new UDPEchoClient(
 						args[0],
 						Integer.parseInt(args[1]),
@@ -36,7 +41,7 @@ public class UDPEchoClient extends NetLayer {
 						Integer.parseInt(args[3]),
 						Integer.parseInt(args[4])
 						); 
-				client.start();
+				client.start(); // Start working
 			}
     	}
     	catch (Exception e)
@@ -79,6 +84,7 @@ public class UDPEchoClient extends NetLayer {
 		socket.send(sendPacket);
 		socket.receive(receivePacket);
 		
+		// Extract received string from packet
 		String receivedString=
 		    new String(receivePacket.getData(),
 			       receivePacket.getOffset(),

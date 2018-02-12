@@ -80,8 +80,7 @@ public abstract class NetLayer {
 	
 	/**
 	 * Takes an input string and validates if it is an IPv4 address. 
-	 * Returns true if it is a correct IPv4 address, otherwise false
-	 * if errorous.
+	 * Returns true if it is a correct IPv4 address, otherwise false.
 	 * @param address
 	 * @return
 	 */

@@ -11,7 +11,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
 /**
- * 
+ * Implementation of Echo Server for UDP using NetLayer and source from the example files.
  * @author Martin Lyrå
  *
  */
@@ -20,6 +20,10 @@ public class UDPEchoServer extends NetLayer {
 	public static final int DEFAULT_BUFFER_SIZE = 1024;
 	public static final int DEFAULT_PORT = 4950;
 	
+	/**
+	 * Main entry for UDPEchoServer as a program
+	 * @param args
+	 */
 	public static void main(String[] args)
 	{
 		try {
