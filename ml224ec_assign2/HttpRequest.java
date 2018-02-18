@@ -1,15 +1,10 @@
 package ml224ec_assign2;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class HttpRequest {
+public class HttpRequest extends HttpBase {
 	
-	private Map<String, String> fields = 
-			new HashMap<String, String>();
 	private final List<HttpContent> attachedContent =
 			new ArrayList<HttpContent>();
 	
@@ -23,7 +18,7 @@ public class HttpRequest {
 	
 	private void parseRequestString(String message)
 	{
-		fields = HttpParser.parse(message);
+		fields = HttpParser.parse(message, false);
 		
 		String[] request = fields.get("Header-Top").split(" ");
 		
@@ -44,17 +39,20 @@ public class HttpRequest {
 			{
 				String boundaryName = HttpParser.getAttribute("boundary", contentInfo);
 				
-				String[] dataParts = fields.get("Content-Data").split("--"+boundaryName);
+				String contentBlock = "";
+				String[] dataParts = fields.get("Content-Data").split(CRLF);
 				for(String part : dataParts)
 				{
-					if (part.isEmpty() || part.equals("--\r\n"))
-						continue;
 					try {
-						attachedContent.add(new HttpContent(part));
-					} catch (UnsupportedEncodingException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+						if (part.equals("--" + boundaryName) 		 // block start/denominator
+						 || part.equals("--" + boundaryName + "--")) // end
+						{
+							if (!contentBlock.isEmpty())
+								attachedContent.add(new HttpContent(contentBlock));
+							contentBlock = "";
+						}
+						contentBlock += part + CRLF;
+					} catch (Exception e) {e.printStackTrace();}
 				}
 			}
 		}
@@ -63,11 +61,6 @@ public class HttpRequest {
 	public List<HttpContent> getParsedContent()
 	{
 		return attachedContent;
-	}
-	
-	public boolean hasField(String fieldName)
-	{
-		return fields.get(fieldName) != null;
 	}
 	
 	public String getMethod()
@@ -83,11 +76,6 @@ public class HttpRequest {
 	public String getHttpStandard()
 	{
 		return fields.get("HttpStandard");
-	}
-	
-	public String getField(String fieldName)
-	{
-		return fields.get(fieldName);
 	}
 	
 	public String toString()

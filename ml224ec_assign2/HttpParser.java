@@ -1,5 +1,6 @@
 package ml224ec_assign2;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,17 +8,34 @@ public class HttpParser {
 	
 	private static final String CRLF = "\r\n";
 
-	public static Map<String, String> parse(String messageString)
+	public static Map<String, String> parse(String messageString, boolean toplessHeader)
 	{
 		Map<String, String> fields = new HashMap<String, String>();
+		int startOfHeader = -1;
 		
 		String[] parts = messageString.split(CRLF);
 		
-		fields.put("Header-Top", parts[0]);
-		
+		/* some browsers add extra CRLF breaks before the header, skip them */
+		for (int i = 0; i < parts.length; i++)
+		{
+			String part = parts[i];
+			if (part.isEmpty())
+				continue;
+			else
+			{
+				startOfHeader = i;
+				break;
+			}
+		}
+			
+		if (!toplessHeader)
+		{
+			fields.put("Header-Top", parts[startOfHeader++]);
+		}
+
 		boolean endOfHeader = false;
 		String contentDataString = "";
-		for (int i = 1; i < parts.length; i++)
+		for (int i = startOfHeader; i < parts.length; i++)
 		{
 			String part = parts[i];
 			if (!endOfHeader)
@@ -48,5 +66,29 @@ public class HttpParser {
 				return param.split("=")[1];
 		}
 		return null;
+	}
+	
+	public static String getArbitaryString(byte[] arbitaryData)
+	{
+		try {
+			return new String(arbitaryData, "ISO-8859-15");
+		} catch (UnsupportedEncodingException e) {
+			return new String(arbitaryData);
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
+	
+	public static byte[] getArbitaryData(String arbitaryString)
+	{
+		try {
+			return arbitaryString.getBytes("ISO-8859-15");
+		} catch (UnsupportedEncodingException e) {
+			return arbitaryString.getBytes();
+		} catch (NullPointerException e) {
+			e.printStackTrace();
+			return new byte[0];
+		}
 	}
 }

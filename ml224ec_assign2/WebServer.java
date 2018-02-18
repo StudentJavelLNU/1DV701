@@ -1,12 +1,9 @@
 package ml224ec_assign2;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
-import java.nio.file.Path;
 
 public class WebServer {
 	
@@ -15,6 +12,9 @@ public class WebServer {
 	
 	/* change the last digit to '2' for Task 2 web content */
 	public static final String CONTENT_PATH = "ml224ec_assign2/web-content-2";
+	public static final String TEMPLATE_PATH = "ml224ec_assign2/templates";
+	
+	public static boolean running;
 
 	public static void main(String[] args) 
 	{			
@@ -27,6 +27,7 @@ public class WebServer {
 
 	public void start()
 	{
+		running = true;
 		try {
 			ServerSocket socket = new ServerSocket();
 			SocketAddress local = new InetSocketAddress(DEFAULT_PORT);
@@ -37,11 +38,13 @@ public class WebServer {
 			
 			System.out.printf("Ready! Listening on port %d.\n", socket.getLocalPort());
 			
-			while (true) {
+			while (running) {
 				Socket request = socket.accept();
 				
 				new Thread(new RequestHandler(request)).start();
 			}
+			
+			socket.close();
 		} catch (Exception e)
 		{
 			e.printStackTrace();

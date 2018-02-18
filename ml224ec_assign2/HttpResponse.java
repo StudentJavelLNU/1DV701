@@ -1,11 +1,12 @@
 package ml224ec_assign2;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HttpResponse {
-	
-	private static final String CRLF = "\r\n";
+public class HttpResponse extends HttpBase {
 	
 	private static final Map<Integer, String> RESPONSE_CODES = 
 			new HashMap<Integer, String>()
@@ -30,27 +31,38 @@ public class HttpResponse {
 	
 	private int statusCode;
 	private String reason;
-	
-	private byte[] content = new byte[0];
-	private String contentType;
-	
-	private String redirectLocation;
 
 	HttpResponse(int statusCode)
 	{
 		this.statusCode = statusCode;
+		
+		postConstructor();
 	}
 	
 	HttpResponse(int statusCode, String reason)
 	{
-		this(statusCode);
-		
+		this.statusCode = statusCode;
 		this.reason = reason;
+		
+		postConstructor();
+	}
+	
+	private void postConstructor()
+	{
+		setField("Server", "ml224ec's Simple Web Server");
+		
+		if (isAnError())
+			setContent(generateErrorPage(), "text/html");
+	}
+	
+	public boolean isAnError()
+	{
+		return statusCode >= 400;
 	}
 	
 	public void setRedirectLocation(String path)
 	{
-		redirectLocation = path;
+		setField("Location", path);
 	}
 	
 	public void setContent(String content, String contentType)
@@ -60,8 +72,9 @@ public class HttpResponse {
 	
 	public void setContent(byte[] content, String contentType)
 	{
-		this.content = content;
-		this.contentType = contentType;
+		setField("Content-Data", HttpParser.getArbitaryString(content));
+		setField("Content-Length", content.length + "");
+		setField("Content-Type", contentType);
 	}
 	
 	private String getReason()
@@ -76,23 +89,43 @@ public class HttpResponse {
 		StringBuilder builder = new StringBuilder();
 		
 		builder.append(String.format("HTTP/1.1 %d %s"+CRLF, statusCode, getReason()));
-		builder.append("Server: ml224ec's Simple Web Server" + CRLF);
+		builder.append(getFieldString("Server") + CRLF);
 		if (statusCode == 302)
-			builder.append("Location: " + redirectLocation + CRLF);
-		else if (statusCode == 200)
+			builder.append(getFieldString("Location") + CRLF);
+		else if (statusCode == 200 || (isAnError() && hasField("Content-Data")))
 		{
-			builder.append("Content-Length: " + content.length + CRLF);
-			builder.append("Content-Type: " + contentType + CRLF);
+			builder.append(getFieldString("Content-Length") + CRLF);
+			builder.append(getFieldString("Content-Type") + CRLF);
 		}
 		builder.append(CRLF);
 		
 		return builder.toString();
 	}
 	
+	public String generateErrorPage() {
+		String result = "";
+		try {
+			Path path = Paths.get(WebServer.TEMPLATE_PATH + "/error-template.html");
+			byte[] templateContent = Files.readAllBytes(path);
+			
+			String template = new String(templateContent);
+			
+			template = template.replaceAll("%status-code%", statusCode + "");
+			template = template.replaceAll("%status-reason%", getReason());
+			
+			result = template;
+		} catch( Exception e ) { e.printStackTrace(); }
+		return result;
+	}
+	
 	public byte[] getBytes()
 	{
 		String header = buildHeader();
 		int headLength = header.length();
+		
+		byte[] content = new byte[0];
+		if (hasField("Content-Data"))
+			content = HttpParser.getArbitaryData(getField("Content-Data"));
 		
 		byte[] bytes = new byte[headLength + content.length];
 		System.arraycopy(header.getBytes(), 0, bytes, 0, headLength);
@@ -103,6 +136,6 @@ public class HttpResponse {
 	
 	public String toString()
 	{
-		return buildHeader() + new String(content);
+		return buildHeader() + getField("Content-Data");
 	}
 }

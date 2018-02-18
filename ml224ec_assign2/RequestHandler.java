@@ -44,8 +44,7 @@ public class RequestHandler implements Runnable {
 	
 	RequestHandler(Socket remote)
 	{
-		this.remote = remote;
-		
+		this.remote = remote;	
 	}
 	
 	@Override
@@ -61,24 +60,35 @@ public class RequestHandler implements Runnable {
 			{
 				int read = in.read(buffer, 0, buffer.length);
 				/* 8-bit encoding to prevent JVM from corrupting arbitary binary data */
-				String str = new String(buffer, "ISO-8859-15");
+				String str = new String(buffer, "ISO-8859-15").substring(0, read);
 				builder.append(str);
 			}
 			
-			String requestString = builder.toString();
-			System.out.println(requestString);
+			String requestString = builder.toString().trim();
+			/* Google Chrome likes to send invaild messages that contain only CR-LF */
+			if (requestString.isEmpty())
+			{
+				remote.close();
+				return;
+			}
+			
+			//System.out.println(requestString);
 			
 			HttpRequest request = new HttpRequest(requestString);
-			
 			String method = request.getMethod();
-			if (method.equals("GET"))
+			
+			Path searchPath = Paths.get(WebServer.CONTENT_PATH + request.getRequestLocation());
+			if (searchPath.endsWith("/") || 
+					searchPath.toFile().isDirectory()) // Look for index file
+				searchPath = Paths.get(
+						searchPath.toString() + "/" + DEFAULT_HTML_PAGE);
+			
+			if (!AccessPolicy.accessAllowed(searchPath.toString()))
+			{
+				sendResponse(new HttpResponse(403));
+			}
+			else if (method.equals("GET"))
 			{	
-				Path searchPath = Paths.get(WebServer.CONTENT_PATH + request.getRequestLocation());
-				if (searchPath.endsWith("/") || 
-						searchPath.toFile().isDirectory()) // Look for index file
-					searchPath = Paths.get(
-							searchPath.toString() + "/" + DEFAULT_HTML_PAGE);
-				
 				//System.out.println(searchPath.toAbsolutePath());
 				if (Files.exists(searchPath))
 				{
@@ -110,12 +120,11 @@ public class RequestHandler implements Runnable {
 					Path dest = Paths.get(
 							WebServer.CONTENT_PATH + relativeDest);
 					
-					try (FileOutputStream fos = new FileOutputStream(dest.toString())) {
-						   fos.write(c.getContentData());
-						   fos.flush();
-						   fos.close();
-						}
-					
+					FileOutputStream fos = new FileOutputStream(dest.toString());
+					fos.write(c.getContentData());
+					fos.flush();
+					fos.close();
+				
 					System.out.println("File " + filename + " uploaded to server to " + dest);
 					
 					HttpResponse response = new HttpResponse(302);
@@ -139,14 +148,11 @@ public class RequestHandler implements Runnable {
 				e1.printStackTrace();
 			}
 		}
-		finally
+		try {
+			remote.close();
+		} catch (Exception e)
 		{
-			try {
-				remote.close();
-			} catch (Exception e)
-			{
-				e.printStackTrace();
-			}
+			e.printStackTrace();
 		}
 	}
 	
