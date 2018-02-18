@@ -13,10 +13,13 @@ public class WebServer {
 	public static final boolean DEBUG = true;
 	public static final int DEFAULT_PORT = 8888;
 	
-	public static final String CONTENT_PATH = "ml224ec_assign2/web-content";
+	/* change the last digit to '2' for Task 2 web content */
+	public static final String CONTENT_PATH = "ml224ec_assign2/web-content-2";
 
 	public static void main(String[] args) 
 	{			
+		AccessPolicy.initialize();
+		
 		WebServer server = new WebServer();
 		
 		server.start();

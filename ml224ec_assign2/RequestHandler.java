@@ -1,5 +1,6 @@
 package ml224ec_assign2;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -12,11 +13,17 @@ import java.util.Map;
 
 public class RequestHandler implements Runnable {
 	
+	
 	private static final String DEFAULT_HTML_PAGE = "index.html";
 
-	private static final HashMap<String, String> map = 
+	private static final Map<String, String> map = 
 			new HashMap<String, String>()
 	{
+		/**
+		 * Eclipse won't fucking shut up telling me about adding a serial number.
+		 */
+		private static final long serialVersionUID = 1L;
+
 		{
 			put("htm", "text/html");
 			put("html", "text/html");
@@ -48,62 +55,98 @@ public class RequestHandler implements Runnable {
 			in = remote.getInputStream();
 			out = remote.getOutputStream();
 			
-			byte[] buffer = new byte[256];
+			byte[] buffer = new byte[1024];
 			StringBuilder builder = new StringBuilder();
 			while (in.available() > 0)
 			{
 				int read = in.read(buffer, 0, buffer.length);
-				builder.append(new String(buffer, 0, read));
+				/* 8-bit encoding to prevent JVM from corrupting arbitary binary data */
+				String str = new String(buffer, "ISO-8859-15");
+				builder.append(str);
 			}
 			
 			String requestString = builder.toString();
+			System.out.println(requestString);
 			
-			String[] parts = requestString.split("\\r\\n");
+			HttpRequest request = new HttpRequest(requestString);
 			
-			System.out.println(parts[0]);
-			
-			String[] request = parts[0].split(" ");
-			
-			String method = request[0];
-			String path = 	request[1];
-			String type = 	request[2];
-			
-			if (request[0].equals("GET") || request[0].equals("POST"))
-			{
-				Path searchPath = Paths.get(WebServer.CONTENT_PATH + path);
-				if (path.endsWith("/")) // Look for index file
+			String method = request.getMethod();
+			if (method.equals("GET"))
+			{	
+				Path searchPath = Paths.get(WebServer.CONTENT_PATH + request.getRequestLocation());
+				if (searchPath.endsWith("/") || 
+						searchPath.toFile().isDirectory()) // Look for index file
 					searchPath = Paths.get(
 							searchPath.toString() + "/" + DEFAULT_HTML_PAGE);
 				
-				System.out.println(searchPath.toAbsolutePath());
+				//System.out.println(searchPath.toAbsolutePath());
 				if (Files.exists(searchPath))
 				{
 					String ext = getFileExtension(searchPath, true);
-					System.out.println(ext);
 					byte[] content = Files.readAllBytes(searchPath);
-					sendResponse(content, map.get(ext));
 					
+					HttpResponse response = new HttpResponse(200); // OK
+					
+					response.setContent(content, map.get(ext));
+					
+					sendResponse(response);
 				}
 				else
 				{
-					sendResponse("404 - File not found", map.get("html"));
+					sendResponse(new HttpResponse(404)); // File not found
 				}
-				/*
-				sendResponse("<html><head></head><body><h1>Hello world!</h1></body></html>", "text/html");
-				System.out.println("Response sent!");
-				*/
+			}
+			else if (method.equals("POST"))
+			{
+				int contentLength = Integer.parseInt(request.getField("Content-Length"));
+				if (contentLength > 0)
+				{
+					HttpContent c = request.getParsedContent().get(0);
+					
+					String filename = HttpParser.getAttribute("filename", c.getDisposition())
+							.replaceAll("\"", "");
+					
+					String relativeDest = "/uploaded/" + filename;
+					Path dest = Paths.get(
+							WebServer.CONTENT_PATH + relativeDest);
+					
+					try (FileOutputStream fos = new FileOutputStream(dest.toString())) {
+						   fos.write(c.getContentData());
+						   fos.flush();
+						   fos.close();
+						}
+					
+					System.out.println("File " + filename + " uploaded to server to " + dest);
+					
+					HttpResponse response = new HttpResponse(302);
+					response.setRedirectLocation(relativeDest);
+					
+					sendResponse(response);
+				}
 			}
 			else
 			{
-				sendResponse("502 - Method is not implemented", map.get("html"));
+				sendResponse(new HttpResponse(502)); // Method not supported
 			}
-			
-			remote.close();
-			//System.out.printf("%s\n", builder.toString().trim());
 		}
 		catch (Exception e)
 		{
 			e.printStackTrace();
+			
+			try {
+				sendResponse(new HttpResponse(500)); // Internal server error
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}
+		}
+		finally
+		{
+			try {
+				remote.close();
+			} catch (Exception e)
+			{
+				e.printStackTrace();
+			}
 		}
 	}
 	
@@ -116,6 +159,12 @@ public class RequestHandler implements Runnable {
 		return n.substring(n.indexOf('.')+ (noDot ? 1 : 0));
 	}
 	
+	private void sendResponse(HttpResponse httpResponse) throws IOException
+	{
+		out.write(httpResponse.getBytes());
+	}
+	
+	/*
 	private void sendResponse(byte[] content, String contentType)
 	{
 		String response 
@@ -140,5 +189,6 @@ public class RequestHandler implements Runnable {
 	{		
 		sendResponse(content.getBytes(), contentType);
 	}
+	*/
 
 }
