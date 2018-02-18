@@ -27,7 +27,17 @@ public class HttpRequest extends HttpBase {
 		fields.put("HttpStandard", request[2]);
 		
 		if (request[0].equals("POST"))
+		{
 			parseContentSection();
+			specialMethodCheck();
+		}
+	}
+	
+	private void specialMethodCheck()
+	{
+		HttpContent methodData = getContentByName("_method");
+		if (methodData != null)
+			fields.put("Method", methodData.getField("Content-Data").trim());
 	}
 	
 	private void parseContentSection()
@@ -56,6 +66,19 @@ public class HttpRequest extends HttpBase {
 				}
 			}
 		}
+	}
+	
+	public HttpContent getContentByName(String formName)
+	{
+		for (HttpContent c : attachedContent)
+		{
+			String info = c.getDisposition();
+			String name = HttpParser.getAttribute("name", info).replaceAll("\"", "");
+			
+			if (name.equals(formName))
+				return c;
+		}
+		return null;
 	}
 	
 	public List<HttpContent> getParsedContent()

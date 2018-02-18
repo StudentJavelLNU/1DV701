@@ -1,6 +1,5 @@
 package ml224ec_assign2;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -16,7 +15,7 @@ public class RequestHandler implements Runnable {
 	
 	private static final String DEFAULT_HTML_PAGE = "index.html";
 
-	private static final Map<String, String> map = 
+	private static final Map<String, String> MEDIA_TYPES = 
 			new HashMap<String, String>()
 	{
 		/**
@@ -76,6 +75,7 @@ public class RequestHandler implements Runnable {
 			
 			HttpRequest request = new HttpRequest(requestString);
 			String method = request.getMethod();
+			System.out.println(method);
 			
 			Path searchPath = Paths.get(WebServer.CONTENT_PATH + request.getRequestLocation());
 			if (searchPath.endsWith("/") || 
@@ -89,54 +89,27 @@ public class RequestHandler implements Runnable {
 			}
 			else if (method.equals("GET"))
 			{	
-				//System.out.println(searchPath.toAbsolutePath());
 				if (Files.exists(searchPath))
 				{
 					String ext = getFileExtension(searchPath, true);
 					byte[] content = Files.readAllBytes(searchPath);
 					
 					HttpResponse response = new HttpResponse(200); // OK
-					
-					response.setContent(content, map.get(ext));
+					response.setContent(content, MEDIA_TYPES.get(ext));
 					
 					sendResponse(response);
 				}
 				else
-				{
 					sendResponse(new HttpResponse(404)); // File not found
-				}
 			}
-			else if (method.equals("POST"))
+			else if (method.equals("POST") || method.equals("PUT"))
 			{
-				int contentLength = Integer.parseInt(request.getField("Content-Length"));
-				if (contentLength > 0)
-				{
-					HttpContent c = request.getParsedContent().get(0);
-					
-					String filename = HttpParser.getAttribute("filename", c.getDisposition())
-							.replaceAll("\"", "");
-					
-					String relativeDest = "/uploaded/" + filename;
-					Path dest = Paths.get(
-							WebServer.CONTENT_PATH + relativeDest);
-					
-					FileOutputStream fos = new FileOutputStream(dest.toString());
-					fos.write(c.getContentData());
-					fos.flush();
-					fos.close();
+				HttpResponse response = ImageUploadService.completeRequest(request);
 				
-					System.out.println("File " + filename + " uploaded to server to " + dest);
-					
-					HttpResponse response = new HttpResponse(302);
-					response.setRedirectLocation(relativeDest);
-					
-					sendResponse(response);
-				}
+				sendResponse(response);
 			}
 			else
-			{
 				sendResponse(new HttpResponse(502)); // Method not supported
-			}
 		}
 		catch (Exception e)
 		{
@@ -168,6 +141,8 @@ public class RequestHandler implements Runnable {
 	private void sendResponse(HttpResponse httpResponse) throws IOException
 	{
 		out.write(httpResponse.getBytes());
+		if (WebServer.DEBUG)
+			System.out.printf("Replied with %s\n", httpResponse.getCode());
 	}
 	
 	/*

@@ -7,6 +7,27 @@ import java.util.Map;
 public class HttpParser {
 	
 	private static final String CRLF = "\r\n";
+	
+	private static final Map<String, String> MEDIA_TYPES = 
+			new HashMap<String, String>()
+	{
+		/**
+		 * Eclipse won't fucking shut up telling me about adding a serial number.
+		 */
+		private static final long serialVersionUID = 1L;
+
+		{
+			put("htm", "text/html");
+			put("html", "text/html");
+			put("txt", "text/plain");
+			put("xml", "text/xml");
+			put("css", "text/css");
+			put("png", "image/png");
+			put("gif", "image/gif");
+			put("jpg", "image/jpg");
+			put("jpeg", "image/jpeg");
+		}
+	};
 
 	public static Map<String, String> parse(String messageString, boolean toplessHeader)
 	{
@@ -90,5 +111,10 @@ public class HttpParser {
 			e.printStackTrace();
 			return new byte[0];
 		}
+	}
+	
+	public static String getContentType(String fileExtension)
+	{
+		return MEDIA_TYPES.get(fileExtension);
 	}
 }

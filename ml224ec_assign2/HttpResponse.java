@@ -3,46 +3,21 @@ package ml224ec_assign2;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 
 public class HttpResponse extends HttpBase {
 	
-	private static final Map<Integer, String> RESPONSE_CODES = 
-			new HashMap<Integer, String>()
-	{
-		/**
-		 * Eclipse won't fucking shut up telling me about adding a serial number.
-		 */
-		private static final long serialVersionUID = 1L;
-
-		{
-			put(200, "OK");
-			
-			put(302, "Found");
-			
-			put(403, "Forbidden");
-			put(404, "Not Found");
-			
-			put(500, "Internal Server Error");
-			put(502, "Method not Supported");
-		}
-	};
+	private HttpStatusCode httpStatusCode;
 	
-	private int statusCode;
-	private String reason;
+	String reason;
 
-	HttpResponse(int statusCode)
+	public HttpResponse(int integerCode)
 	{
-		this.statusCode = statusCode;
-		
-		postConstructor();
+		this(HttpStatusCode.valueOf(integerCode));
 	}
 	
-	HttpResponse(int statusCode, String reason)
+	public HttpResponse(HttpStatusCode code)
 	{
-		this.statusCode = statusCode;
-		this.reason = reason;
+		httpStatusCode = code;
 		
 		postConstructor();
 	}
@@ -57,7 +32,7 @@ public class HttpResponse extends HttpBase {
 	
 	public boolean isAnError()
 	{
-		return statusCode >= 400;
+		return httpStatusCode.getCode() >= 400;
 	}
 	
 	public void setRedirectLocation(String path)
@@ -81,12 +56,14 @@ public class HttpResponse extends HttpBase {
 	{
 		if (reason != null)
 			return reason;
-		return RESPONSE_CODES.get(statusCode);
+		return httpStatusCode.getMessage();
 	}
 	
 	private String buildHeader()
 	{
 		StringBuilder builder = new StringBuilder();
+		
+		int statusCode = httpStatusCode.getCode();
 		
 		builder.append(String.format("HTTP/1.1 %d %s"+CRLF, statusCode, getReason()));
 		builder.append(getFieldString("Server") + CRLF);
@@ -110,7 +87,7 @@ public class HttpResponse extends HttpBase {
 			
 			String template = new String(templateContent);
 			
-			template = template.replaceAll("%status-code%", statusCode + "");
+			template = template.replaceAll("%status-code%", httpStatusCode.getCode() + "");
 			template = template.replaceAll("%status-reason%", getReason());
 			
 			result = template;
@@ -132,6 +109,11 @@ public class HttpResponse extends HttpBase {
 		System.arraycopy(content, 0, bytes, headLength, content.length);
 		
 		return bytes;
+	}
+	
+	public HttpStatusCode getCode()
+	{
+		return httpStatusCode;
 	}
 	
 	public String toString()
