@@ -4,6 +4,12 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * An utility class for providing functions to help parsing of HTTP texts into accessible 
+ * dictionaries and objects.
+ * @author Martin Lyrå
+ *
+ */
 public class HttpParser {
 	
 	/**
@@ -115,17 +121,17 @@ public class HttpParser {
 	}
 	
 	/**
-	 * Helper function for converting an arbitary byte array to a string without data loss due to
+	 * Helper function for converting an arbitrary byte array to a string without data loss due to
 	 * encoding. By encoding the string with 8-bit charset.
-	 * @param arbitaryData
+	 * @param arbitraryData
 	 * @return
 	 */
-	public static String getArbitaryString(byte[] arbitaryData)
+	public static String getArbitraryString(byte[] arbitraryData)
 	{
 		try {
-			return new String(arbitaryData, "ISO-8859-15");
+			return new String(arbitraryData, "ISO-8859-15");
 		} catch (UnsupportedEncodingException e) {
-			return new String(arbitaryData);
+			return new String(arbitraryData);
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 			return "";
@@ -133,17 +139,17 @@ public class HttpParser {
 	}
 	
 	/**
-	 * Helper function for converting an arbitary string (a string encoded with 8-bit charset) back
+	 * Helper function for converting an arbitrary string (a string encoded with 8-bit charset) back
 	 * to an arbitary byte array.
-	 * @param arbitaryString
+	 * @param arbitraryString
 	 * @return
 	 */
-	public static byte[] getArbitaryData(String arbitaryString)
+	public static byte[] getArbitraryData(String arbitraryString)
 	{
 		try {
-			return arbitaryString.getBytes("ISO-8859-15");
+			return arbitraryString.getBytes("ISO-8859-15");
 		} catch (UnsupportedEncodingException e) {
-			return arbitaryString.getBytes();
+			return arbitraryString.getBytes();
 		} catch (NullPointerException e) {
 			e.printStackTrace();
 			return new byte[0];

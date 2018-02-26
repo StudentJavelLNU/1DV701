@@ -166,7 +166,7 @@ public class RequestHandler implements Runnable {
 	private Path getHtmlFile(Path directory, String filename)
 	{
 		Path p = Paths.get(directory.toString() + '/' + filename + ".htm");
-		if( Files.exists(p))
+		if(!Files.exists(p))
 			p = Paths.get(directory.toString() + '/' + filename + ".html");
 		return p;		
 	}

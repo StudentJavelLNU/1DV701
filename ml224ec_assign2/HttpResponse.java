@@ -82,7 +82,7 @@ public class HttpResponse extends HttpBase {
 	 */
 	public void setContent(byte[] content, String contentType)
 	{
-		setField("Content-Data", HttpParser.getArbitaryString(content));
+		setField("Content-Data", HttpParser.getArbitraryString(content));
 		setField("Content-Length", content.length + "");
 		setField("Content-Type", contentType);
 	}
@@ -157,7 +157,7 @@ public class HttpResponse extends HttpBase {
 		/* Content */
 		byte[] content = new byte[0];
 		if (hasField("Content-Data"))
-			content = HttpParser.getArbitaryData(getField("Content-Data"));
+			content = HttpParser.getArbitraryData(getField("Content-Data"));
 		
 		/* Put both in a single array */
 		byte[] bytes = new byte[headLength + content.length];
