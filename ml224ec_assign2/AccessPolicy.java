@@ -7,6 +7,12 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * A rudiamentary and simple, yet essentially functional implementation of access policy
+ * regulating access to locations in the web server's content folder.
+ * @author Martin Lyrå
+ *
+ */
 public class AccessPolicy {
 	
 	private static final String POLICY_CONFIG_NAME = "access_policy.config";
@@ -16,6 +22,9 @@ public class AccessPolicy {
 	
 	private static boolean defaultPolicy = true;
 
+	/**
+	 * Look for and load access policy if there exists one in the serving content folder
+	 */
 	public static void initialize()
 	{
 		/* it is always a good idea to restrict access to the policy configuration file */
@@ -30,15 +39,19 @@ public class AccessPolicy {
 			boolean setPolicy = false;
 			for (String line : dataString.split("\n"))
 			{
+				/* Filter out commenting (traditional line comments using '#') */
 				int commentIndex = line.indexOf("#");
 				if (commentIndex > -1)
 					line = line.substring(0, commentIndex);
+				
+				/* Filter out whitespaceing & ignore empty lines */
 				line = line.trim();
 				if (line.isEmpty())
 					continue;
 				
-				line = line.replace("/", "\\");
+				line = line.replace("/", "\\"); // replace backs-lashes with Windows' forward-slashes
 				
+				/* Command */
 				if(line.startsWith("$"))
 				{	
 					if (line.contains("allow"))
@@ -46,16 +59,16 @@ public class AccessPolicy {
 						if (line.endsWith("all"))
 							defaultPolicy = true;
 						else
-							setPolicy = true;
+							setPolicy = true; // set any entires after this as allowed
 					}
 					else if (line.contains("forbid"))
 					{
 						if (line.endsWith("all"))
 							defaultPolicy = false;
 						else
-							setPolicy = false;
+							setPolicy = false; // set any entries after this as forbidden
 					}
-					else if (line.contains("end"))
+					else if (line.contains("end")) // reset to default policy
 						setPolicy = defaultPolicy;
 					
 					continue;
@@ -68,6 +81,12 @@ public class AccessPolicy {
 		}
 	}
 	
+	/**
+	 * Check whether the access regulation rules out access to path. 
+	 * Done by searching for a "contains()"-match between key and path.
+	 * @param path
+	 * @return true if access is allowed, false if access is forbidden
+	 */
 	public static boolean accessAllowed(String path)
 	{
 		for (String key : accessPolicies.keySet())

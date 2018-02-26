@@ -6,9 +6,15 @@ import java.util.Map;
 
 public class HttpParser {
 	
+	/**
+	 * String for Carriage-Return (\r} and Line-Feed-Break (\n) at once.
+	 */
 	private static final String CRLF = "\r\n";
 	
-	private static final Map<String, String> MEDIA_TYPES = 
+	/**
+	 * A map that serves as a dictionary for content types when forming a HTTP reply
+	 */
+	public static final Map<String, String> MEDIA_TYPES = 
 			new HashMap<String, String>()
 	{
 		/**
@@ -29,6 +35,13 @@ public class HttpParser {
 		}
 	};
 
+	/**
+	 * Parses HTTP header and body into a single (Hash)Map of keys with associated values.
+	 * @param messageString - the HTTP head and body as a single string
+	 * @param toplessHeader - True for the parser to treat the first header line as if it is a field
+	 * (e.g. the input HTTP is not a request or response)
+	 * @return
+	 */
 	public static Map<String, String> parse(String messageString, boolean toplessHeader)
 	{
 		Map<String, String> fields = new HashMap<String, String>();
@@ -48,19 +61,24 @@ public class HttpParser {
 				break;
 			}
 		}
-			
+		
+		/* If the Header has a top (is a Request or Response), put it as a special entry */
 		if (!toplessHeader)
 		{
 			fields.put("Header-Top", parts[startOfHeader++]);
 		}
 
+		/* Parse all data, header first, then body */
 		boolean endOfHeader = false;
 		String contentDataString = "";
 		for (int i = startOfHeader; i < parts.length; i++)
 		{
 			String part = parts[i];
+			
+			/* Head */
 			if (!endOfHeader)
 			{
+				/* An empty line with only CRLF is thought to be an divider between header and body */
 				if (part.isEmpty())
 					endOfHeader = true;
 				else
@@ -70,6 +88,7 @@ public class HttpParser {
 						fields.put(part.substring(0, si), part.substring(si+1).trim());
 				}
 			}
+			/* Body */
 			else
 				contentDataString += part + CRLF;
 		}
@@ -79,6 +98,12 @@ public class HttpParser {
 		return fields;
 	}
 	
+	/**
+	 * Get an attribute from input string if there is any. Null if none was found.
+	 * @param targetAttribute
+	 * @param sourceString
+	 * @return
+	 */
 	public static String getAttribute(String targetAttribute, String sourceString)
 	{	
 		for (String param : sourceString.split("; "))
@@ -89,6 +114,12 @@ public class HttpParser {
 		return null;
 	}
 	
+	/**
+	 * Helper function for converting an arbitary byte array to a string without data loss due to
+	 * encoding. By encoding the string with 8-bit charset.
+	 * @param arbitaryData
+	 * @return
+	 */
 	public static String getArbitaryString(byte[] arbitaryData)
 	{
 		try {
@@ -101,6 +132,12 @@ public class HttpParser {
 		}
 	}
 	
+	/**
+	 * Helper function for converting an arbitary string (a string encoded with 8-bit charset) back
+	 * to an arbitary byte array.
+	 * @param arbitaryString
+	 * @return
+	 */
 	public static byte[] getArbitaryData(String arbitaryString)
 	{
 		try {
@@ -113,6 +150,11 @@ public class HttpParser {
 		}
 	}
 	
+	/**
+	 * Returns the media content type associated with given file extension.
+	 * @param fileExtension
+	 * @return
+	 */
 	public static String getContentType(String fileExtension)
 	{
 		return MEDIA_TYPES.get(fileExtension);

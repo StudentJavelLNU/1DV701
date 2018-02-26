@@ -5,6 +5,11 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 
+/**
+ * Main entry object for this web server software
+ * @author Martin Lyrå
+ *
+ */
 public class WebServer {
 	
 	public static final boolean DEBUG = true;
@@ -16,6 +21,10 @@ public class WebServer {
 	
 	public static boolean running;
 
+	/**
+	 * Entry point of server
+	 * @param args
+	 */
 	public static void main(String[] args) 
 	{			
 		AccessPolicy.initialize();
@@ -25,6 +34,10 @@ public class WebServer {
 		server.start();
 	}
 
+	/**
+	 * Initialization and start-up of the actual webserver. All work is done from a
+	 * while loop in this function.
+	 */
 	public void start()
 	{
 		running = true;

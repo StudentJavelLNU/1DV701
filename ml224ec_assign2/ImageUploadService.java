@@ -7,7 +7,22 @@ import java.nio.file.Paths;
 
 import ml224ec_assign2.exceptions.HttpBadRequestException;
 
+/**
+ * An example service used to test and serve POST and PUT HTTP requests sent to
+ * this web server. Handles upload of images and then saves them to a specific folder.
+ * @author Martin Lyrå
+ *
+ */
 public class ImageUploadService {
+	
+	/**
+	 * To serve ImageUploadService's purposes to fullest, HTTP requests are handled in this function. 
+	 * 
+	 * It returns a HttpRequest for the request handler to return to client. Its contents varies
+	 * depending on how successful or errorous the process went. But it should never be null.
+	 * @param request
+	 * @return
+	 */
 	public static HttpResponse completeRequest(HttpRequest request)
 	{
 		HttpResponse response = null;

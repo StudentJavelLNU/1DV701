@@ -1,5 +1,10 @@
 package ml224ec_assign2;
 
+/**
+ * An enum that specifes all Http status codes supported by this server.
+ * @author Martin Lyrå
+ *
+ */
 public enum HttpStatusCode {
 	OK(200, "OK"),
 	
@@ -26,16 +31,29 @@ public enum HttpStatusCode {
 		this.msg = msg;
 	}
 	
+	/**
+	 * Get the status code as an integer
+	 * @return
+	 */
 	public int getCode()
 	{
 		return code;
 	}
 	
+	/**
+	 * Get a laconic meaning for associated status code.
+	 * @return
+	 */
 	public String getMessage()
 	{
 		return msg;
 	}
 	
+	/**
+	 * Returns a HttpStatusCode object with the specified integer.
+	 * @param integer
+	 * @return
+	 */
 	public static HttpStatusCode valueOf(int integer)
 	{
 		for (HttpStatusCode c : HttpStatusCode.values())
@@ -44,6 +62,7 @@ public enum HttpStatusCode {
 		return UNKNOWN_ERROR;
 	}
 	
+	// self-explainatory?
 	public String toString()
 	{
 		return String.format("%d: %s", code, msg);
