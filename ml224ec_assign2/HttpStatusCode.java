@@ -15,6 +15,7 @@ public enum HttpStatusCode {
 	BAD_REQUEST(400, "Bad Request"),
 	FORBIDDEN(403, "Forbidden"),
 	NOT_FOUND(404, "Not Found"),
+	REQUEST_TIMEOUT(408, "Request Timeout"),
 	
 	INTERNAL_ERROR(500, "Internal Error"),
 	METHOD_NOT_SUPPORTED(502, "Method not Supported"),

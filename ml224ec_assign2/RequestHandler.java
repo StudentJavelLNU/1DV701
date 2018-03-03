@@ -3,7 +3,9 @@ package ml224ec_assign2;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,6 +21,8 @@ public class RequestHandler implements Runnable {
 	 * Name of index HTML file
 	 */
 	private static final String DEFAULT_HTML_PAGE_NAME = "index";
+	
+	private static final int SOCKET_TIMEOUT = 10 * 1000; // 10 sec in ms
 	
 	private final Socket remote;
 	
@@ -43,22 +47,12 @@ public class RequestHandler implements Runnable {
 				in = remote.getInputStream();
 				out = remote.getOutputStream();
 				
-				/* Prepare buffer and string builder to read input data */
-				byte[] buffer = new byte[1024];
-				StringBuilder builder = new StringBuilder();
-				while (in.available() > 0)
-				{
-					int read = in.read(buffer, 0, buffer.length);
-					/* 8-bit encoding to prevent JVM from corrupting arbitary binary data */
-					String str = new String(buffer, "ISO-8859-15").substring(0, read);
-					builder.append(str);
-				}
-				
-				/* Complete the string pieces into one string */
-				String requestString = builder.toString().trim();
+				/* Read message from client */
+				remote.setSoTimeout(SOCKET_TIMEOUT);
+				String requestString = readInData();
 				
 				/* Google Chrome likes to send invaild messages that contain only CR-LF */
-				if (requestString.isEmpty())
+				if (requestString == null || requestString.isEmpty())
 				{
 					remote.close();
 					return;
@@ -118,6 +112,11 @@ public class RequestHandler implements Runnable {
 				else
 					sendResponse(new HttpResponse(502)); // Method not supported
 			}
+			/* Socket timeout */
+			catch (SocketTimeoutException sote)
+			{
+				sendResponse(new HttpResponse(408)); // Request timeout
+			}
 			/* Internal error */
 			catch (Exception e)
 			{
@@ -131,6 +130,31 @@ public class RequestHandler implements Runnable {
 		{
 			// e.printStackTrace(); // I don't think we do have need for this line
 		}
+	}
+	
+	/**
+	 * Reads the inbound traffic for data. A timeout is set to 10 seconds
+	 * @return
+	 * @throws IOException
+	 */
+	private String readInData() throws IOException
+	{
+		/* Prepare buffer and string builder to read input data */
+		int totalRead = 0;
+		byte[] buffer = new byte[1024];
+		StringBuilder builder = new StringBuilder();
+		
+		/* Do actual read */
+		do
+		{
+			int read = in.read(buffer, 0, buffer.length);
+			/* 8-bit encoding to prevent JVM from corrupting arbitary binary data */
+			String str = new String(buffer, "ISO-8859-15").substring(0, read);
+			builder.append(str);
+		} while (in.available() > 0 );
+		
+		/* Complete the string pieces into one string */
+		return builder.toString().trim();
 	}
 	
 	/**

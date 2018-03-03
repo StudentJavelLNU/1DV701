@@ -16,7 +16,7 @@ public class WebServer {
 	public static final int DEFAULT_PORT = 8888;
 	
 	/* change the last digit to '2' for Task 2 web content */
-	public static final String CONTENT_PATH = "ml224ec_assign2/web-content-2";
+	public static final String CONTENT_PATH = "ml224ec_assign2/web-content-1";
 	public static final String TEMPLATE_PATH = "ml224ec_assign2/templates";
 	
 	public static boolean running;
