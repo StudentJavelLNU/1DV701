@@ -13,6 +13,8 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import ml224ec_assign3.tftp.Error;
 import ml224ec_assign3.tftp.Operation;
@@ -33,6 +35,9 @@ public class TFTPServer
 	
 	public static final String READDIR = "read/";
 	public static final String WRITEDIR = "write/";
+	
+	public static final Map<Short, TFTPHandler> handlers =
+			new HashMap<Short, TFTPHandler>();
 
 	public static void main(String[] args) {
 		if (args.length > 0) 
@@ -77,6 +82,16 @@ public class TFTPServer
 				final Operation reqtype = ParseRQ(buf, requestedFile);
 				final String file = requestedFile.toString();
 				
+				boolean newConnection = false;
+				
+				if (newConnection)
+				{
+					final TFTPHandler handler = new TFTPHandler(new DatagramSocket(0), clientAddress);
+					handlers.put((short) clientAddress.getPort(), handler);
+					new Thread(handler).start();
+				}
+				
+				/*
 				new Thread() 
 				{
 					public void run() 
@@ -95,16 +110,21 @@ public class TFTPServer
 									clientAddress.getHostName(), clientAddress.getPort());  
 									
 							// Read request
-							if (reqtype == Operation.READ_REQUEST) 
-							{      
+							switch (reqtype)
+							{
+							case READ_REQUEST: {
 								requestedFile.insert(0, READDIR);
 								HandleRQ(sendSocket, requestedFile.toString(), Operation.READ_REQUEST);
+								break;
 							}
-							// Write request
-							else 
-							{                       
+							case WRITE_REQUEST: {
 								requestedFile.insert(0, WRITEDIR);
 								HandleRQ(sendSocket, requestedFile.toString(), Operation.WRITE_REQUEST);  
+								break;
+							}
+							default: case ERROR: {
+								break;
+							}
 							}
 							sendSocket.close();
 						} 
@@ -112,7 +132,7 @@ public class TFTPServer
 							{e.printStackTrace();
 						}
 					}
-				}.start();
+				}.start();*/
 			}
 			catch (Exception e)
 			{
@@ -224,7 +244,7 @@ public class TFTPServer
 	private void handleReadRequest(DatagramSocket socket, String file)
 			throws IOException, TimeoutException
 	{
-		byte[] dataBuffer = Files.readAllBytes(Paths.get(file));
+		byte[] dataBuffer = readAllBytes(file);
 		
 		int remainingLength = dataBuffer.length;
 		short block = 1;
@@ -374,6 +394,15 @@ public class TFTPServer
 		bb.put((byte) 0);
 		
 		socket.send(new DatagramPacket(bb.array(), bb.limit()));
+	}
+	
+	private byte[] readAllBytes(String file) throws IOException
+	{
+		try {
+			return Files.readAllBytes(Paths.get(file));
+		} catch (IOException e) {
+			throw e;
+		}
 	}
 	
 	/**
