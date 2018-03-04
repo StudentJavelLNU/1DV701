@@ -1,5 +1,11 @@
 package ml224ec_assign3.tftp;
 
+/**
+ * Enum for specifying and representing operation codes in TFTP
+ * as specified by RFC1350
+ * @author Martin Lyrå
+ *
+ */
 public enum Operation {
 	UNDEFINED(0),
 	

@@ -48,6 +48,7 @@ public class TFTPServer
 		while (running) 
 		{        
 			try {
+				/* Receive request */
 				final DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
 				
 				socket.receive(packet);
@@ -55,6 +56,7 @@ public class TFTPServer
 				final InetSocketAddress clientAddress = 
 						new InetSocketAddress(packet.getAddress(), packet.getPort());
 				
+				/* Handle the request packet in a new connection and thread */
 				new Thread(
 						new TFTPHandler(new DatagramSocket(0), clientAddress, packet)
 						).start();

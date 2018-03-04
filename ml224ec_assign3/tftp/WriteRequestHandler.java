@@ -15,6 +15,12 @@ import ml224ec_assign3.tftp.exceptions.IllegalOperationException;
 import ml224ec_assign3.tftp.exceptions.OutOfSpaceException;
 import ml224ec_assign3.tftp.exceptions.TFTPException;
 
+/**
+ * Implementation of AbstractRequestHandler for handling
+ * write requests (WRQ)
+ * @author Martin Lyrå
+ *
+ */
 public class WriteRequestHandler extends AbstractRequestHandler {
 
 	public WriteRequestHandler(String targetFile) {
@@ -42,6 +48,7 @@ public class WriteRequestHandler extends AbstractRequestHandler {
 			/* Append data to file */
 			writeToFile(targetFile, data);
 			
+			/* If the packet is smaller than 512, then we are finished */
 			transferDone = data.length < TFTP.DATA_BUFFER_SIZE;
 			
 			if (TFTPServer.DEBUG)
@@ -58,6 +65,7 @@ public class WriteRequestHandler extends AbstractRequestHandler {
 		if (TFTPServer.DEBUG)
 			System.out.printf("#%d: Acknowledging\n", currentBlock);
 		
+		/* Synchronized when the last packet has been received */
 		synced = transferDone;
 	}
 
@@ -98,12 +106,17 @@ public class WriteRequestHandler extends AbstractRequestHandler {
 	{
 		if (getFreeDiskSpaceBytes() < data.length)
 			throw new OutOfSpaceException();
+		/* Append to file */
 		try (FileOutputStream os = new FileOutputStream(file, true))
 		{
 			os.write(data);
 		} 
 	}
 	
+	/**
+	 * Returns the amount of free space on disk in bytes 
+	 * @return
+	 */
 	private long getFreeDiskSpaceBytes()
 	{
 		return new File(targetFile.substring(0, targetFile.lastIndexOf('/'))).getFreeSpace();

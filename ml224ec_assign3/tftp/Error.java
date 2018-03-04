@@ -1,5 +1,11 @@
 package ml224ec_assign3.tftp;
 
+/**
+ * Enum for specifying and representing error codes in TFTP as specified
+ * by RFC1350
+ * @author Martin Lyrå
+ *
+ */
 public enum Error {
 	UNKNOWN(0), // undefined or other
 	FILE_NOT_FOUND(1),

@@ -2,6 +2,11 @@ package ml224ec_assign3.tftp.exceptions;
 
 import ml224ec_assign3.tftp.Error;
 
+/**
+ * Represents TFTP error #1
+ * @author Martin Lyrå
+ *
+ */
 public class FileNotFoundException extends TFTPException {
 
 	/**

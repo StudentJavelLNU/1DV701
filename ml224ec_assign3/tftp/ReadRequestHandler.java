@@ -13,6 +13,12 @@ import ml224ec_assign3.tftp.exceptions.FileNotFoundException;
 import ml224ec_assign3.tftp.exceptions.IllegalOperationException;
 import ml224ec_assign3.tftp.exceptions.TFTPException;
 
+/**
+ * Implementation of AbstractRequestHandler for handling
+ * read requests (RRQ)
+ * @author Martin Lyrå
+ *
+ */
 public class ReadRequestHandler extends AbstractRequestHandler {
 
 	private int maxBlocks;
@@ -94,6 +100,14 @@ public class ReadRequestHandler extends AbstractRequestHandler {
 		return Operation.READ_REQUEST;
 	}
 
+	/**
+	 * Calculates how many blocks will be needed to transfer all
+	 * contents in buffer, and compares if the given block exceeds or equals
+	 * the result. True if the block *is* the last block, or exceeds that limit.
+	 * False when the block is below the said limit. 
+	 * @param block
+	 * @return
+	 */
 	private boolean isLastBlock(int block)
 	{
 		/* Calculate the limit when it is uninitialized */

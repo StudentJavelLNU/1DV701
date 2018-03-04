@@ -54,13 +54,14 @@ public class TFTPHandler implements Runnable {
 		else if (requestType == Operation.WRITE_REQUEST)
 			handler = new WriteRequestHandler(WRITEDIR + targetFile);
 		else
-			throw new IllegalArgumentException();
+			handler = null;
 	}
 	
 	@Override
 	public void run() {
 		try 
 		{
+			/* Set socket timeout and connect to client as per specification */
 			socket.setSoTimeout(SOCKET_TIMEOUT_MS);
 			socket.connect(remoteAddress);
 				
@@ -69,6 +70,11 @@ public class TFTPHandler implements Runnable {
 					targetFile);
 			try 
 			{	
+				/* A handler is initialized in constructor, 
+				 * will be null if the request is invaild */
+				if (handler == null)
+					throw new IllegalOperationException();
+				
 				/* Start the chain reaction by transmitting the first packet */
 				handler.start(socket);
 				
@@ -76,10 +82,13 @@ public class TFTPHandler implements Runnable {
 				int attempts = 0;
 				while (socket.isConnected())
 				{
+					/* Receive packet */
 					TFTPPacket packet = receive(socket);
 					
+					/* Try handle the packet */
 					try 
 					{
+						/* A packet has been received */
 						if (packet != null)
 						{
 							/* Print a message when debugging */
@@ -102,6 +111,7 @@ public class TFTPHandler implements Runnable {
 							if (handler.isTransferFinished())
 								socket.disconnect();
 						}
+						/* An timeout has been elapsed */
 						else
 						{
 							/* We would not want our application get stuck re-transmitting */
@@ -122,6 +132,7 @@ public class TFTPHandler implements Runnable {
 					}
 				}
 			}
+			/* TFTP error handling */
 			catch (TFTPException e)
 			{
 				String message = e.getMessage();
@@ -134,17 +145,26 @@ public class TFTPHandler implements Runnable {
 				if (!(e instanceof ErrorPacketException))
 					sendError(socket, e.getAssociatedErrorCode(), e.getMessage());
 				
+				/* Since we had sent an error, we can assume it is safe to disconnect */
 				socket.disconnect();
 			}
 			
 			socket.close();
 		}
+		/* Fatal error handling */
 		catch (Exception e)
 		{
 			e.printStackTrace();
 		}
 	}
 	
+	/**
+	 * Parses the request packet, returning the operation code and
+	 * a list of string parameters
+	 * @param packet
+	 * @param parameters
+	 * @return
+	 */
 	private Operation parseRequestPacket(DatagramPacket packet, List<String> parameters)
 	{
 		ByteBuffer buffer = ByteBuffer.wrap(packet.getData());
@@ -159,7 +179,7 @@ public class TFTPHandler implements Runnable {
 	}
 	
 	/**
-	 * 
+	 * Sends an error packet to remote destination
 	 * 
 	 * Previouly named "send_ERR"
 	 * @param socket
@@ -179,6 +199,13 @@ public class TFTPHandler implements Runnable {
 		socket.send(new DatagramPacket(bb.array(), bb.limit()));
 	}
 	
+	/**
+	 * Function for receiving UDP packets and return them to more accessible
+	 * TFTP packet objects.
+	 * @param socket
+	 * @return
+	 * @throws IOException
+	 */
 	private TFTPPacket receive(DatagramSocket socket) throws IOException
 	{
 		try {
