@@ -10,15 +10,22 @@ public enum Error {
 	FILE_ALREADY_EXISTS(6),
 	NO_SUCH_USER(7);
 	
+	private final short value;
+	
 	Error(int val)
 	{
-		errorCode = (short) val;
+		value = (short) val;
 	}
 	
 	public short getCode()
 	{
-		return errorCode;
+		return value;
 	}
-	
-	private final short errorCode;
+
+	public static Error valueOf(short val) {
+		for (Error err : values())
+			if (err.value == val)
+				return err;
+		return UNKNOWN;
+	}
 }

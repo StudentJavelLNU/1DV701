@@ -13,4 +13,8 @@ public class UnknownTransferIDException extends TFTPException {
 		super(message);
 		associatedError = Error.UNKNOWN_TRANSFER_ID;
 	}
+
+	public UnknownTransferIDException() {
+		this("Unknown transfer ID");
+	}
 }
