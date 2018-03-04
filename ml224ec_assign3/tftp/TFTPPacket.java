@@ -6,9 +6,6 @@ import java.nio.ByteBuffer;
 
 public class TFTPPacket {
 
-	/* Constant(s) & Fields as defined by RFC1350 */
-	private static final int DEFAULT_DATA_BUFFER_SIZE = 512;
-	
 	private final Operation opCode;
 	private final short secondCode;
 	private byte[] data;

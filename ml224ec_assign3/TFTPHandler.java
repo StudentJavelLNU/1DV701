@@ -1,16 +1,11 @@
 package ml224ec_assign3;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,10 +17,7 @@ import ml224ec_assign3.tftp.TFTP;
 import ml224ec_assign3.tftp.TFTPPacket;
 import ml224ec_assign3.tftp.WriteRequestHandler;
 import ml224ec_assign3.tftp.exceptions.ErrorPacketException;
-import ml224ec_assign3.tftp.exceptions.FileExistsException;
-import ml224ec_assign3.tftp.exceptions.FileNotFoundException;
 import ml224ec_assign3.tftp.exceptions.IllegalOperationException;
-import ml224ec_assign3.tftp.exceptions.OutOfSpaceException;
 import ml224ec_assign3.tftp.exceptions.TFTPException;
 import ml224ec_assign3.tftp.exceptions.TimeoutException;
 import ml224ec_assign3.tftp.exceptions.UnknownTransferIDException;
@@ -180,10 +172,9 @@ public class TFTPHandler implements Runnable {
 	{
 		ByteBuffer bb = ByteBuffer.allocate(4 + message.length() + 1);
 		
-		bb.getShort(Operation.ERROR.getCode());
+		bb.putShort(Operation.ERROR.getCode());
 		bb.putShort(errorCode.getCode());
 		bb.put(message.getBytes());
-		bb.put((byte) 0);
 		
 		socket.send(new DatagramPacket(bb.array(), bb.limit()));
 	}

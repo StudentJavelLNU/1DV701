@@ -27,6 +27,8 @@ public class ReadRequestHandler extends AbstractRequestHandler {
 		
 		if (!Files.exists(path))
 			throw new FileNotFoundException();
+		else if (!Files.isReadable(path))
+			throw new AccessViolationException();
 		
 		try {
 			buffer = ByteBuffer.wrap(Files.readAllBytes(path));
